@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:14
+    container_name: python-data-api-db
+    environment:
+      POSTGRES_DB: python_data_api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d python_data_api"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: python-data-api
+    ports:
+      - "8000:8000"
+    environment:
+      DB_NAME: python_data_api
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
